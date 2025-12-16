@@ -13,9 +13,12 @@ interface TripData {
   fullName: string;
   trainNumber: string;
   departureDate: string;
+  departureTime: string;
   arrivalDate: string;
+  arrivalTime: string;
   carNumber: string;
   seatNumber: string;
+  contactInfo: string;
   additionalInfo: string;
 }
 
@@ -26,9 +29,12 @@ const Index = () => {
     fullName: '',
     trainNumber: '',
     departureDate: '',
+    departureTime: '',
     arrivalDate: '',
+    arrivalTime: '',
     carNumber: '',
     seatNumber: '',
+    contactInfo: '',
     additionalInfo: ''
   });
   const [searchResults, setSearchResults] = useState<TripData[]>([]);
@@ -39,23 +45,36 @@ const Index = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSearch = () => {
-    const newTrip: TripData = {
-      ...formData,
-      id: Date.now().toString()
-    };
+  const handleSearch = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/0e42e2e8-bdab-45bb-82f7-166182ea9a98', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-    const matches = myTrips.filter(trip => 
-      trip.trainNumber === formData.trainNumber &&
-      trip.departureDate === formData.departureDate &&
-      trip.arrivalDate === formData.arrivalDate &&
-      trip.carNumber === formData.carNumber &&
-      trip.id !== newTrip.id
-    );
-
-    setSearchResults(matches);
-    setShowResults(true);
-    setMyTrips(prev => [...prev, newTrip]);
+      const data = await response.json();
+      setSearchResults(data.companions || []);
+      setShowResults(true);
+      
+      setFormData({
+        id: '',
+        fullName: formData.fullName,
+        trainNumber: '',
+        departureDate: '',
+        departureTime: '',
+        arrivalDate: '',
+        arrivalTime: '',
+        carNumber: '',
+        seatNumber: '',
+        contactInfo: '',
+        additionalInfo: ''
+      });
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   return (
@@ -66,7 +85,7 @@ const Index = () => {
             <div className="w-10 h-10 bg-sky-500 rounded-lg flex items-center justify-center">
               <Icon name="Train" size={24} className="text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-800">ПопутчикЪ</h1>
+            <h1 className="text-2xl font-bold text-slate-800">Вагон знакомств</h1>
           </div>
           <nav className="flex gap-4">
             <Button 
@@ -195,12 +214,33 @@ const Index = () => {
                     />
                   </div>
                   <div>
+                    <Label htmlFor="departureTime">Время отправления</Label>
+                    <Input 
+                      id="departureTime"
+                      type="time"
+                      value={formData.departureTime}
+                      onChange={(e) => handleInputChange('departureTime', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
                     <Label htmlFor="arrivalDate">Дата прибытия</Label>
                     <Input 
                       id="arrivalDate"
                       type="date"
                       value={formData.arrivalDate}
                       onChange={(e) => handleInputChange('arrivalDate', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="arrivalTime">Время прибытия</Label>
+                    <Input 
+                      id="arrivalTime"
+                      type="time"
+                      value={formData.arrivalTime}
+                      onChange={(e) => handleInputChange('arrivalTime', e.target.value)}
                     />
                   </div>
                 </div>
@@ -212,6 +252,16 @@ const Index = () => {
                     placeholder="12"
                     value={formData.seatNumber}
                     onChange={(e) => handleInputChange('seatNumber', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="contactInfo">Контакт для связи</Label>
+                  <Input 
+                    id="contactInfo"
+                    placeholder="+7 (900) 123-45-67 или @telegram"
+                    value={formData.contactInfo}
+                    onChange={(e) => handleInputChange('contactInfo', e.target.value)}
                   />
                 </div>
 
@@ -247,6 +297,7 @@ const Index = () => {
                           <TableRow>
                             <TableHead>ФИО</TableHead>
                             <TableHead>Место</TableHead>
+                            <TableHead>Контакт</TableHead>
                             <TableHead>Дополнительная информация</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -255,6 +306,7 @@ const Index = () => {
                             <TableRow key={result.id}>
                               <TableCell className="font-medium">{result.fullName}</TableCell>
                               <TableCell>{result.seatNumber}</TableCell>
+                              <TableCell>{result.contactInfo}</TableCell>
                               <TableCell>{result.additionalInfo || '—'}</TableCell>
                             </TableRow>
                           ))}
@@ -265,7 +317,7 @@ const Index = () => {
                     <Card className="p-6 bg-slate-50 border-slate-200">
                       <div className="flex items-center gap-3 text-slate-600">
                         <Icon name="Info" size={24} className="text-slate-400" />
-                        <p className="text-lg">Попутчики о себе не заявили</p>
+                        <p className="text-lg">Попутчики о себе не заявили, попробуйте позже, возможно кто-то появится</p>
                       </div>
                     </Card>
                   )}
@@ -349,6 +401,7 @@ const Index = () => {
                               <p className="text-sm text-slate-600">
                                 Поезд {contact.trainNumber}, вагон {contact.carNumber}, место {contact.seatNumber}
                               </p>
+                              <p className="text-sm text-sky-600 font-medium mt-1">{contact.contactInfo}</p>
                               {contact.additionalInfo && (
                                 <p className="text-sm text-slate-500 mt-1">{contact.additionalInfo}</p>
                               )}
@@ -379,7 +432,7 @@ const Index = () => {
 
       <footer className="bg-white border-t border-slate-200 mt-16">
         <div className="container mx-auto px-4 py-8 text-center text-slate-600">
-          <p>© 2024 ПопутчикЪ — Найди своих попутчиков в пути 🚂</p>
+          <p>© 2024 Вагон знакомств — Найди своих попутчиков в пути 🚂</p>
         </div>
       </footer>
     </div>

@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "POST: Добавление новой поездки и поиск попутчиков",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "fullName": "Иванов Иван Иванович",
+        "trainNumber": "123А",
+        "departureDate": "2024-12-20",
+        "departureTime": "14:30",
+        "arrivalDate": "2024-12-21",
+        "arrivalTime": "08:45",
+        "carNumber": "5",
+        "seatNumber": "12",
+        "contactInfo": "+7 (900) 123-45-67",
+        "additionalInfo": "Люблю читать в дороге"
+      },
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET: Получение истории поездок пользователя",
+      "method": "GET",
+      "path": "/?fullName=Иванов%20Иван%20Иванович",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    }
+  ]
+}
